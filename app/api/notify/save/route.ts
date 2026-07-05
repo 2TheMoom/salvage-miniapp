@@ -3,11 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -20,11 +15,16 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { wallet, fid, token, url } = await req.json();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    if (!wallet || !token || !url) {
+    const { wallet, fid } = await req.json();
+
+    if (!wallet) {
       return NextResponse.json(
-        { success: false, error: "Missing wallet, token, or url" },
+        { success: false, error: "Missing wallet" },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
         {
           wallet: wallet.toLowerCase(),
           fid: fid ?? null,
-          token,
-          url,
+          token: "",
+          url: "",
           enabled: true,
         },
         { onConflict: "wallet" }

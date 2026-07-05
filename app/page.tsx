@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMiniKit, useAddFrame } from "@coinbase/onchainkit/minikit";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useAccount, useConnect } from "wagmi";
 
 interface VictimFinding {
@@ -241,7 +241,6 @@ export default function Home() {
   const { setMiniAppReady, isMiniAppReady, context } = useMiniKit();
   const { address } = useAccount();
   const { connect, connectors } = useConnect();
-  const addFrame = useAddFrame();
 
   const [screen, setScreen] = useState<Screen>("scanning");
   const [results, setResults] = useState<VictimFinding[]>([]);
@@ -292,39 +291,24 @@ export default function Home() {
 
   async function handleSaveFrame() {
     setError("");
+    if (!wallet) {
+      setError("Connect a wallet first");
+      return;
+    }
     try {
-      setError("Calling addFrame...");
-      const result = await addFrame();
-
-      if (result) {
-        setError(`Got token: ${result.token.slice(0, 12)}... saving...`);
-        if (wallet) {
-          const res = await fetch(`/api/notify/save`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              wallet,
-              fid: context?.user?.fid ?? null,
-              token: result.token,
-              url: result.url,
-            }),
-          });
-          setError(`Saved. Status: ${res.status}`);
-        } else {
-          setError("Got token but no wallet connected");
-        }
-        setFrameSaved(true);
-      } else {
-        setError(
-          `addFrame returned null. client.added = ${String(
-            context?.client?.added
-          )}`
-        );
-      }
+      const res = await fetch(`/api/notify/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet,
+          fid: context?.user?.fid ?? null,
+        }),
+      });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      setFrameSaved(true);
     } catch (e) {
       setError(
-        "addFrame error: " +
-          (e instanceof Error ? e.message : String(e))
+        e instanceof Error ? e.message : "Could not enable notifications"
       );
     }
   }
