@@ -293,7 +293,21 @@ export default function Home() {
 
   async function handleSaveFrame() {
     try {
-      await addFrame();
+      const result = await addFrame();
+      // addFrame returns the notification token + url when the user adds
+      // the frame and grants notification permission.
+      if (result && wallet) {
+        await fetch(`/api/notify/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wallet,
+            fid: context?.user?.fid ?? null,
+            token: result.token,
+            url: result.url,
+          }),
+        });
+      }
       setFrameSaved(true);
       await sendNotification({
         title: "Salvage is watching",
@@ -311,11 +325,30 @@ export default function Home() {
     <div style={s.root}>
       {/* Header */}
       <div style={s.header}>
-        <span style={s.logo}>⟁ SALVAGE</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <svg
+            width={28}
+            height={28}
+            viewBox="0 0 52 52"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Salvage sonar mark"
+          >
+            <path d="M 8 44 A 26 26 0 0 1 44 8" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.18" />
+            <path d="M 13 44 A 21 21 0 0 1 44 13" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.45" />
+            <path d="M 19 44 A 15 15 0 0 1 44 19" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" fill="none" opacity="0.82" />
+            <circle cx="44" cy="44" r="4.5" fill="#ffffff" />
+            <circle cx="44" cy="44" r="8" stroke="#ffffff" strokeWidth="1.5" fill="none" opacity="0.25" />
+          </svg>
+          <span style={s.logo}>SALVAGE</span>
+        </div>
         {wallet ? (
           <span style={s.walletChip}>{shortWallet}</span>
         ) : (
-          <button style={s.connectBtn} onClick={() => connect({ connector: connectors[0] })}>
+          <button
+            style={s.connectBtn}
+            onClick={() => connectors[0] && connect({ connector: connectors[0] })}
+          >
             Connect
           </button>
         )}
