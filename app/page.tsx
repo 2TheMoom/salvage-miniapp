@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMiniKit, useAddFrame, useNotification } from "@coinbase/onchainkit/minikit";
+import { useMiniKit, useAddFrame } from "@coinbase/onchainkit/minikit";
 import { useAccount, useConnect } from "wagmi";
 
 interface VictimFinding {
@@ -242,7 +242,6 @@ export default function Home() {
   const { address } = useAccount();
   const { connect, connectors } = useConnect();
   const addFrame = useAddFrame();
-  const sendNotification = useNotification();
 
   const [screen, setScreen] = useState<Screen>("scanning");
   const [results, setResults] = useState<VictimFinding[]>([]);
@@ -292,37 +291,40 @@ export default function Home() {
   }
 
   async function handleSaveFrame() {
+    setError("");
     try {
+      setError("Calling addFrame...");
       const result = await addFrame();
 
-      if (result && wallet) {
-        // Fresh add — we got a token+url. Persist it for later pushes.
-        await fetch(`/api/notify/save`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wallet,
-            fid: context?.user?.fid ?? null,
-            token: result.token,
-            url: result.url,
-          }),
-        });
+      if (result) {
+        setError(`Got token: ${result.token.slice(0, 12)}... saving...`);
+        if (wallet) {
+          const res = await fetch(`/api/notify/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              wallet,
+              fid: context?.user?.fid ?? null,
+              token: result.token,
+              url: result.url,
+            }),
+          });
+          setError(`Saved. Status: ${res.status}`);
+        } else {
+          setError("Got token but no wallet connected");
+        }
         setFrameSaved(true);
-        await sendNotification({
-          title: "Salvage is watching",
-          body: "We'll notify you when stranded tokens are found linked to your wallet.",
-        });
       } else {
-        // addFrame returned null: either already added (so no new token is
-        // issued) or the user dismissed. Reflect saved state either way.
-        setFrameSaved(true);
         setError(
-          "If notifications don't arrive, remove Salvage from your saved apps and re-open to re-enable."
+          `addFrame returned null. client.added = ${String(
+            context?.client?.added
+          )}`
         );
       }
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Could not enable notifications"
+        "addFrame error: " +
+          (e instanceof Error ? e.message : String(e))
       );
     }
   }
@@ -387,6 +389,7 @@ export default function Home() {
           ) : (
             <p style={s.savedText}>Notifications enabled ✓</p>
           )}
+          {error && <p style={s.muted}>{error}</p>}
         </div>
       )}
 
