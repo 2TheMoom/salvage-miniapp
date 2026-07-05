@@ -294,9 +294,9 @@ export default function Home() {
   async function handleSaveFrame() {
     try {
       const result = await addFrame();
-      // addFrame returns the notification token + url when the user adds
-      // the frame and grants notification permission.
+
       if (result && wallet) {
+        // Fresh add — we got a token+url. Persist it for later pushes.
         await fetch(`/api/notify/save`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -307,13 +307,24 @@ export default function Home() {
             url: result.url,
           }),
         });
+        setFrameSaved(true);
+        await sendNotification({
+          title: "Salvage is watching",
+          body: "We'll notify you when stranded tokens are found linked to your wallet.",
+        });
+      } else {
+        // addFrame returned null: either already added (so no new token is
+        // issued) or the user dismissed. Reflect saved state either way.
+        setFrameSaved(true);
+        setError(
+          "If notifications don't arrive, remove Salvage from your saved apps and re-open to re-enable."
+        );
       }
-      setFrameSaved(true);
-      await sendNotification({
-        title: "Salvage is watching",
-        body: "We'll notify you when stranded tokens are found linked to your wallet.",
-      });
-    } catch {}
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not enable notifications"
+      );
+    }
   }
 
   const wallet = address || (context?.user as ContextUserWithAddress | undefined)?.address;
