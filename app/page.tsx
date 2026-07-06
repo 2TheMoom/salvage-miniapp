@@ -46,6 +46,12 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: "0.08em",
     color: "#E9E6DF",
   },
+  logoLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    textDecoration: "none",
+  },
   walletChip: {
     fontSize: "11px",
     fontFamily: "'JetBrains Mono', monospace",
@@ -233,6 +239,14 @@ const s: Record<string, React.CSSProperties> = {
     color: "#5A5A60",
     fontFamily: "'JetBrains Mono', monospace",
   },
+  footerLink: {
+    display: "block",
+    fontSize: "11px",
+    color: "#627EEA",
+    fontFamily: "'JetBrains Mono', monospace",
+    textDecoration: "none",
+    marginTop: "4px",
+  },
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -322,7 +336,13 @@ export default function Home() {
     <div style={s.root}>
       {/* Header */}
       <div style={s.header}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <a
+          href="https://www.usesalvage.xyz"
+          target="_blank"
+          rel="noreferrer"
+          style={s.logoLink}
+          aria-label="Go to usesalvage.xyz"
+        >
           <svg
             width={28}
             height={28}
@@ -338,7 +358,7 @@ export default function Home() {
             <circle cx="44" cy="44" r="8" stroke="#ffffff" strokeWidth="1.5" fill="none" opacity="0.25" />
           </svg>
           <span style={s.logo}>SALVAGE</span>
-        </div>
+        </a>
         {wallet ? (
           <span style={s.walletChip}>{shortWallet}</span>
         ) : (
@@ -436,6 +456,14 @@ export default function Home() {
       {/* Footer */}
       <div style={s.footer}>
         <span style={s.footerText}>What the EVM left behind.</span>
+        <a
+          href="https://www.usesalvage.xyz"
+          target="_blank"
+          rel="noreferrer"
+          style={s.footerLink}
+        >
+          Full recovery suite → usesalvage.xyz
+        </a>
       </div>
     </div>
   );
