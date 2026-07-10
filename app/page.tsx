@@ -3,19 +3,10 @@
 import { useEffect, useState } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useAccount, useConnect } from "wagmi";
+import ClaimPanel from "@/app/components/ClaimPanel";
+import { VictimFinding } from "@/app/lib/types";
 
-interface VictimFinding {
-  txHash: string;
-  timestamp?: string;
-  tokenAddress: string;
-  tokenSymbol: string;
-  tokenName: string;
-  amount: string;
-  valueUsd: number;
-  recipientContract: string;
-}
-
-type Screen = "scanning" | "results" | "empty" | "error";
+type Screen = "scanning" | "results" | "empty" | "error" | "claim";
 
 // Some Farcaster mini app hosts attach a wallet address to the user context
 // even though it isn't part of the official @farcaster/miniapp-sdk type.
@@ -257,10 +248,12 @@ export default function Home() {
   const { connect, connectors } = useConnect();
 
   const [screen, setScreen] = useState<Screen>("scanning");
+  const [prevScreen, setPrevScreen] = useState<Screen>("results");
   const [results, setResults] = useState<VictimFinding[]>([]);
   const [totalUsd, setTotalUsd] = useState<string>("0");
   const [error, setError] = useState<string>("");
   const [frameSaved, setFrameSaved] = useState(false);
+  const [selectedFinding, setSelectedFinding] = useState<VictimFinding | null>(null);
 
   useEffect(() => {
     if (!isMiniAppReady) setMiniAppReady();
@@ -386,6 +379,10 @@ export default function Home() {
           <div style={s.emptyIcon}>✓</div>
           <p style={s.scanText}>No stranded tokens found</p>
           <p style={s.muted}>Your wallet looks clean.</p>
+          <p style={s.muted}>
+            Salvage checks for tokens accidentally sent to contracts that
+            can&apos;t move them back out.
+          </p>
           {!frameSaved ? (
             <button style={s.btn} onClick={handleSaveFrame}>
               Get notified if that changes
@@ -430,14 +427,20 @@ export default function Home() {
                   <span style={s.balance}>
                     {parseFloat(t.amount).toLocaleString()} {t.tokenSymbol}
                   </span>
-                  <a
-                    href={`https://www.usesalvage.xyz?lossTx=${t.txHash}&token=${t.tokenAddress}&contract=${t.recipientContract}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={s.recoverBtn}
+                  <button
+                    style={{
+                      ...s.recoverBtn,
+                      cursor: "pointer",
+                      fontFamily: "'Space Grotesk', sans-serif",
+                    }}
+                    onClick={() => {
+                      setSelectedFinding(t);
+                      setPrevScreen(screen);
+                      setScreen("claim");
+                    }}
                   >
                     Recover
-                  </a>
+                  </button>
                 </div>
               </div>
             ))}
@@ -450,6 +453,44 @@ export default function Home() {
           ) : (
             <p style={s.savedText}>Notifications enabled ✓</p>
           )}
+        </div>
+      )}
+
+      {/* Claim */}
+      {screen === "claim" && selectedFinding && wallet && (
+        <div style={s.resultsWrap}>
+          <div style={{ padding: "12px 16px 0" }}>
+            <button
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#627EEA",
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "12px",
+                cursor: "pointer",
+                padding: 0,
+              }}
+              onClick={() => setScreen(prevScreen)}
+            >
+              ← Back
+            </button>
+          </div>
+          <div style={{ padding: "12px 16px" }}>
+            <div style={s.card}>
+              <div style={s.cardTop}>
+                <span style={s.symbol}>{selectedFinding.tokenSymbol}</span>
+                <span style={s.usd}>${selectedFinding.valueUsd.toFixed(2)}</span>
+              </div>
+              <div style={s.cardMid}>
+                <span style={s.contractName}>{selectedFinding.tokenName}</span>
+              </div>
+              <ClaimPanel
+                finding={selectedFinding}
+                victimWallet={wallet}
+                chain="base"
+              />
+            </div>
+          </div>
         </div>
       )}
 
