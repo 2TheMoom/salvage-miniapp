@@ -9,4 +9,5 @@ export interface VictimFinding {
   amount: string;
   valueUsd: number;
   recipientContract: string;
+  chain: Chain;
 }

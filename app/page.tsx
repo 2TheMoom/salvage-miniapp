@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useAccount, useConnect } from "wagmi";
 import ClaimPanel from "@/app/components/ClaimPanel";
-import { VictimFinding } from "@/app/lib/types";
+import { VictimFinding, Chain } from "@/app/lib/types";
+
+const SCAN_CHAINS: Chain[] = ["eth", "base"];
+const CHAIN_LABEL: Record<Chain, string> = { eth: "Ethereum", base: "Base" };
 
 type Screen = "scanning" | "results" | "empty" | "error" | "claim";
 
@@ -189,6 +192,19 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: "14px",
     color: "#E9E6DF",
   },
+  chainBadge: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "10px",
+    fontWeight: 600,
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
+    color: "#627EEA",
+    background: "rgba(98,126,234,0.1)",
+    border: "1px solid rgba(98,126,234,0.3)",
+    borderRadius: "6px",
+    padding: "2px 6px",
+    marginLeft: "8px",
+  },
   usd: {
     fontWeight: 700,
     fontSize: "15px",
@@ -268,27 +284,52 @@ export default function Home() {
   async function runScan(wallet: string) {
     setScreen("scanning");
     try {
-      const res = await fetch(`https://www.usesalvage.xyz/api/victim-scan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: wallet, chain: "base" }),
-      });
-      if (!res.ok) throw new Error("Scan failed");
-      const data = await res.json();
+      // Scan both chains in parallel — a hardcoded single chain would silently
+      // miss stranded tokens on whichever chain wasn't checked. Each chain's
+      // failure is independent: one failing shouldn't hide results from the
+      // other, only both failing is a real scan failure.
+      const outcomes = await Promise.allSettled(
+        SCAN_CHAINS.map(async (chain) => {
+          const res = await fetch(`https://www.usesalvage.xyz/api/victim-scan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: wallet, chain }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success || !data.result) {
+            throw new Error(data.error ?? "Scan failed");
+          }
+          return { chain, result: data.result };
+        })
+      );
 
-      if (!data.success || !data.result) {
-        throw new Error(data.error ?? "Scan failed");
+      let combined: VictimFinding[] = [];
+      let total = 0;
+      let anySucceeded = false;
+
+      for (const outcome of outcomes) {
+        if (outcome.status !== "fulfilled") continue;
+        anySucceeded = true;
+        const { chain, result } = outcome.value;
+        const tagged: VictimFinding[] = (result.findings ?? []).map(
+          (f: Omit<VictimFinding, "chain">) => ({ ...f, chain })
+        );
+        combined = combined.concat(tagged);
+        total += result.totalLostUsd ?? 0;
       }
 
-      const findings: VictimFinding[] = data.result.findings ?? [];
+      if (!anySucceeded) {
+        throw new Error("Scan failed");
+      }
 
-      if (findings.length === 0) {
+      if (combined.length === 0) {
         setScreen("empty");
         return;
       }
 
-      setResults(findings);
-      setTotalUsd(data.result.totalLostUsd.toFixed(2));
+      combined.sort((a, b) => b.valueUsd - a.valueUsd);
+      setResults(combined);
+      setTotalUsd(total.toFixed(2));
       setScreen("results");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -417,7 +458,10 @@ export default function Home() {
             {results.map((t, i) => (
               <div key={i} style={s.card}>
                 <div style={s.cardTop}>
-                  <span style={s.symbol}>{t.tokenSymbol}</span>
+                  <span>
+                    <span style={s.symbol}>{t.tokenSymbol}</span>
+                    <span style={s.chainBadge}>{CHAIN_LABEL[t.chain]}</span>
+                  </span>
                   <span style={s.usd}>${t.valueUsd.toFixed(2)}</span>
                 </div>
                 <div style={s.cardMid}>
@@ -478,7 +522,12 @@ export default function Home() {
           <div style={{ padding: "12px 16px" }}>
             <div style={s.card}>
               <div style={s.cardTop}>
-                <span style={s.symbol}>{selectedFinding.tokenSymbol}</span>
+                <span>
+                  <span style={s.symbol}>{selectedFinding.tokenSymbol}</span>
+                  <span style={s.chainBadge}>
+                    {CHAIN_LABEL[selectedFinding.chain]}
+                  </span>
+                </span>
                 <span style={s.usd}>${selectedFinding.valueUsd.toFixed(2)}</span>
               </div>
               <div style={s.cardMid}>
@@ -487,7 +536,7 @@ export default function Home() {
               <ClaimPanel
                 finding={selectedFinding}
                 victimWallet={wallet}
-                chain="base"
+                chain={selectedFinding.chain}
               />
             </div>
           </div>
