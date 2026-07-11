@@ -13,6 +13,26 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: "/icon.png",
       apple: "/icon.png",
     },
+    openGraph: {
+      title: minikitConfig.miniapp.ogTitle,
+      description: minikitConfig.miniapp.ogDescription,
+      url: minikitConfig.miniapp.homeUrl,
+      siteName: minikitConfig.miniapp.name,
+      images: [
+        {
+          url: minikitConfig.miniapp.ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: minikitConfig.miniapp.ogTitle,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: minikitConfig.miniapp.ogTitle,
+      description: minikitConfig.miniapp.ogDescription,
+      images: [minikitConfig.miniapp.ogImageUrl],
+    },
     other: {
       "base:app_id": "6a49d54329e0b587da6d8eec",
       "fc:miniapp": JSON.stringify({
