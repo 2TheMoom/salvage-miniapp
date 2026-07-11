@@ -552,7 +552,7 @@ export default function Home() {
           rel="noreferrer"
           style={s.footerLink}
         >
-          Full recovery suite → usesalvage.xyz
+          Scan contracts & owner recovery → usesalvage.xyz
         </a>
       </div>
     </div>
