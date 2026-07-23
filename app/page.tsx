@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount, useConnect, useSignMessage } from "wagmi";
 import ClaimPanel from "@/app/components/ClaimPanel";
 import { VictimFinding, Chain } from "@/app/lib/types";
 
@@ -262,6 +262,7 @@ export default function Home() {
   const { setMiniAppReady, isMiniAppReady, context } = useMiniKit();
   const { address } = useAccount();
   const { connect, connectors } = useConnect();
+  const { signMessageAsync } = useSignMessage();
 
   const [screen, setScreen] = useState<Screen>("scanning");
   const [prevScreen, setPrevScreen] = useState<Screen>("results");
@@ -339,17 +340,29 @@ export default function Home() {
 
   async function handleSaveFrame() {
     setError("");
-    if (!wallet) {
+    // Needs the actual wagmi-connected account, not just whatever address
+    // the Farcaster context reports — the request below has to be signed by
+    // that same wallet, and we can only sign with an account wagmi has
+    // actually connected.
+    if (!address) {
       setError("Connect a wallet first");
       return;
     }
     try {
+      const timestamp = Date.now();
+      // Must match the message the server reconstructs in
+      // app/api/notify/save/route.ts's buildMessage() exactly.
+      const message = `Enable Salvage recovery notifications for ${address.toLowerCase()}\n\nTimestamp: ${timestamp}`;
+      const signature = await signMessageAsync({ message });
+
       const res = await fetch(`/api/notify/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          wallet,
+          wallet: address,
           fid: context?.user?.fid ?? null,
+          timestamp,
+          signature,
         }),
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
