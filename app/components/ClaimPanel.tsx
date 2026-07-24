@@ -38,13 +38,16 @@ type PanelState =
   | "settled"
   | "error";
 
+// Same tokens as the main Salvage web app (src/app/globals.css) — this
+// panel renders inside page.tsx's card list, which uses the light Dashboard
+// palette, not a standalone dark theme.
 const s: Record<string, React.CSSProperties> = {
   wrap: {
     marginTop: "10px",
     padding: "14px",
     borderRadius: "12px",
-    background: "#16161A",
-    border: "1px solid #1E1E24",
+    background: "#EDEAE3", // --card-inner — one step in from the card it sits inside
+    border: "1px solid rgba(26,26,30,0.14)", // --border-md
   },
   eyebrow: {
     fontFamily: "'JetBrains Mono', monospace",
@@ -52,13 +55,13 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    color: "#5A5A60",
+    color: "#A8A8B0", // --text-3
     marginBottom: "10px",
   },
   body: {
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: "12px",
-    color: "#8A8A90",
+    color: "#6B6B75", // --text-2
     lineHeight: 1.7,
   },
   btn: {
@@ -78,7 +81,7 @@ const s: Record<string, React.CSSProperties> = {
     marginRight: "8px",
     background: "transparent",
     color: "#627EEA",
-    border: "1px solid rgba(98,126,234,0.4)",
+    border: "1px solid rgba(98,126,234,0.22)", // --eth-border
     borderRadius: "10px",
     padding: "10px 18px",
     fontSize: "13px",
@@ -90,9 +93,9 @@ const s: Record<string, React.CSSProperties> = {
     marginTop: "8px",
     padding: "9px 11px",
     borderRadius: "8px",
-    background: "#0F0F11",
-    border: "1px solid #1E1E24",
-    color: "#E9E6DF",
+    background: "#F5F3EF", // --card
+    border: "1px solid rgba(26,26,30,0.14)", // --border-md
+    color: "#1A1A1E", // --text
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: "11px",
     wordBreak: "break-all",
@@ -100,22 +103,30 @@ const s: Record<string, React.CSSProperties> = {
   success: {
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: "12px",
-    color: "#3de8a0",
+    color: "#1A6B3C", // --green
     lineHeight: 1.7,
   },
   error: {
     marginTop: "8px",
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: "11px",
-    color: "#e85d5d",
+    color: "#B01C2E", // --crimson
   },
+  // Matches the main app's .chip-link — a pill, not an underlined text link.
   txLink: {
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
     marginTop: "8px",
-    marginRight: "12px",
+    marginRight: "8px",
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: "11px",
+    fontWeight: 600,
     color: "#627EEA",
+    background: "rgba(98,126,234,0.09)", // --eth-soft
+    border: "1px solid rgba(98,126,234,0.22)", // --eth-border
+    borderRadius: "12px",
+    padding: "3px 10px",
+    textDecoration: "none",
   },
 };
 
@@ -422,7 +433,7 @@ Verify the settlement contract yourself: https://${explorer}/address/${routerAdd
       {isRegistered && isSettled && (
         <div style={s.success}>
           <div>✓ Recovery complete — this claim has been settled on-chain.</div>
-          <div style={{ color: "#8A8A90", marginTop: "4px" }}>
+          <div style={{ color: "#6B6B75", marginTop: "4px" }}>
             {hasFinder
               ? "90% routed to the victim, 7% to the finder, 3% to the protocol. Nothing further to do."
               : "95% routed to the victim, 5% to the protocol. Nothing further to do."}
@@ -436,7 +447,7 @@ Verify the settlement contract yourself: https://${explorer}/address/${routerAdd
           <div style={s.addressBox}>{receiver}</div>
           <div style={{ marginBottom: "4px" }}>
             {funded ? (
-              <span style={{ color: "#3de8a0" }}>● Receiver funded — ready to settle</span>
+              <span style={{ color: "#1A6B3C" }}>● Receiver funded — ready to settle</span>
             ) : (
               "Share this with the contract owner. Once they rescue the tokens here, anyone can settle."
             )}
@@ -447,7 +458,7 @@ Verify the settlement contract yourself: https://${explorer}/address/${routerAdd
             </button>
             {funded && (
               <button
-                style={{ ...s.btn, marginTop: "10px", background: "#3de8a0", color: "#0F0F11" }}
+                style={{ ...s.btn, marginTop: "10px", background: "#1A6B3C", color: "#fff" }}
                 onClick={handleSettle}
                 disabled={state === "settling"}
               >

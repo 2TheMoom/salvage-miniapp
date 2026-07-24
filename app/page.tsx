@@ -17,28 +17,42 @@ type ContextUserWithAddress = { address?: string };
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
+// Same tokens as the main Salvage web app (src/app/globals.css): a dark
+// header bar (matching its .d-nav) over a light body + footer (matching its
+// .d-footer) — not a flat dark theme, which is what the landing page's
+// marketing sections use, not the actual dashboard/app experience this
+// mini app is the equivalent of.
 const s: Record<string, React.CSSProperties> = {
   root: {
     minHeight: "100dvh",
-    background: "#0F0F11",
+    background: "#E9E6DF", // --bg
     display: "flex",
     flexDirection: "column",
     fontFamily: "'Space Grotesk', sans-serif",
-    color: "#E9E6DF",
+    color: "#1A1A1E", // --text
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     padding: "16px 20px",
-    borderBottom: "1px solid #1E1E24",
+    background: "#0F0F11", // --dark, matches .d-nav
+    borderBottom: "1px solid rgba(255,255,255,0.08)", // --dark-border
+  },
+  connectErrorBanner: {
+    fontSize: "11px",
+    fontFamily: "'JetBrains Mono', monospace",
+    color: "#B01C2E", // --crimson
+    background: "rgba(176,28,46,0.08)", // --crimson-soft
+    borderBottom: "1px solid rgba(176,28,46,0.2)", // --crimson-border
+    padding: "8px 20px",
   },
   logo: {
     fontFamily: "'Barlow Condensed', sans-serif",
     fontWeight: 700,
     fontSize: "18px",
     letterSpacing: "0.08em",
-    color: "#E9E6DF",
+    color: "#E9E6DF", // stays light — sits on the header's own dark background
   },
   logoLink: {
     display: "flex",
@@ -86,12 +100,12 @@ const s: Record<string, React.CSSProperties> = {
   scanText: {
     fontSize: "16px",
     fontWeight: 600,
-    color: "#E9E6DF",
+    color: "#1A1A1E", // --text
     textAlign: "center",
   },
   muted: {
     fontSize: "12px",
-    color: "#5A5A60",
+    color: "#6B6B75", // --text-2
     fontFamily: "'JetBrains Mono', monospace",
     textAlign: "center",
   },
@@ -99,13 +113,13 @@ const s: Record<string, React.CSSProperties> = {
     width: "48px",
     height: "48px",
     borderRadius: "50%",
-    background: "rgba(26,107,60,0.15)",
-    border: "1px solid rgba(26,107,60,0.4)",
+    background: "rgba(26,107,60,0.09)", // --green-soft
+    border: "1px solid rgba(26,107,60,0.22)", // --green-border
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontSize: "20px",
-    color: "#3de8a0",
+    color: "#1A6B3C", // --green
   },
   btn: {
     marginTop: "8px",
@@ -123,7 +137,7 @@ const s: Record<string, React.CSSProperties> = {
     margin: "16px 20px 0",
     background: "transparent",
     color: "#627EEA",
-    border: "1px solid rgba(98,126,234,0.4)",
+    border: "1px solid rgba(98,126,234,0.22)", // --eth-border
     borderRadius: "10px",
     padding: "12px 24px",
     fontSize: "14px",
@@ -134,7 +148,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   savedText: {
     fontSize: "13px",
-    color: "#3de8a0",
+    color: "#1A6B3C", // --green
     textAlign: "center",
     padding: "8px 20px",
   },
@@ -145,8 +159,8 @@ const s: Record<string, React.CSSProperties> = {
     paddingBottom: "16px",
   },
   totalBanner: {
-    background: "rgba(98,126,234,0.08)",
-    borderBottom: "1px solid rgba(98,126,234,0.2)",
+    background: "rgba(98,126,234,0.09)", // --eth-soft
+    borderBottom: "1px solid rgba(98,126,234,0.22)", // --eth-border
     padding: "16px 20px",
     display: "flex",
     justifyContent: "space-between",
@@ -154,7 +168,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   totalLabel: {
     fontSize: "12px",
-    color: "#5A5A60",
+    color: "#A8A8B0", // --text-3
     textTransform: "uppercase",
     letterSpacing: "0.08em",
     fontFamily: "'JetBrains Mono', monospace",
@@ -173,8 +187,8 @@ const s: Record<string, React.CSSProperties> = {
     gap: "10px",
   },
   card: {
-    background: "#16161A",
-    border: "1px solid #1E1E24",
+    background: "#F5F3EF", // --card
+    border: "1px solid rgba(26,26,30,0.14)", // --border-md
     borderRadius: "12px",
     padding: "14px 16px",
     display: "flex",
@@ -190,7 +204,7 @@ const s: Record<string, React.CSSProperties> = {
     fontFamily: "'JetBrains Mono', monospace",
     fontWeight: 700,
     fontSize: "14px",
-    color: "#E9E6DF",
+    color: "#1A1A1E", // --text
   },
   chainBadge: {
     fontFamily: "'JetBrains Mono', monospace",
@@ -199,8 +213,8 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: "0.05em",
     textTransform: "uppercase",
     color: "#627EEA",
-    background: "rgba(98,126,234,0.1)",
-    border: "1px solid rgba(98,126,234,0.3)",
+    background: "rgba(98,126,234,0.09)", // --eth-soft
+    border: "1px solid rgba(98,126,234,0.22)", // --eth-border
     borderRadius: "6px",
     padding: "2px 6px",
     marginLeft: "8px",
@@ -213,7 +227,7 @@ const s: Record<string, React.CSSProperties> = {
   cardMid: {},
   contractName: {
     fontSize: "12px",
-    color: "#5A5A60",
+    color: "#6B6B75", // --text-2
   },
   cardBot: {
     display: "flex",
@@ -224,26 +238,26 @@ const s: Record<string, React.CSSProperties> = {
   balance: {
     fontSize: "12px",
     fontFamily: "'JetBrains Mono', monospace",
-    color: "#5A5A60",
+    color: "#6B6B75", // --text-2
   },
   recoverBtn: {
     fontSize: "13px",
     fontWeight: 600,
     color: "#627EEA",
     textDecoration: "none",
-    background: "rgba(98,126,234,0.1)",
-    border: "1px solid rgba(98,126,234,0.3)",
+    background: "rgba(98,126,234,0.09)", // --eth-soft
+    border: "1px solid rgba(98,126,234,0.22)", // --eth-border
     borderRadius: "8px",
     padding: "5px 12px",
   },
   footer: {
     padding: "12px 20px",
-    borderTop: "1px solid #1E1E24",
+    borderTop: "1px solid rgba(26,26,30,0.09)", // --border
     textAlign: "center",
   },
   footerText: {
     fontSize: "11px",
-    color: "#5A5A60",
+    color: "#A8A8B0", // --text-3
     fontFamily: "'JetBrains Mono', monospace",
   },
   footerLink: {
@@ -261,7 +275,7 @@ const s: Record<string, React.CSSProperties> = {
 export default function Home() {
   const { setMiniAppReady, isMiniAppReady, context } = useMiniKit();
   const { address } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { connectAsync, connectors } = useConnect();
   const { signMessageAsync } = useSignMessage();
 
   const [screen, setScreen] = useState<Screen>("scanning");
@@ -271,6 +285,25 @@ export default function Home() {
   const [error, setError] = useState<string>("");
   const [frameSaved, setFrameSaved] = useState(false);
   const [selectedFinding, setSelectedFinding] = useState<VictimFinding | null>(null);
+  const [connectError, setConnectError] = useState<string>("");
+
+  // Which connector actually works depends on the host: the Farcaster
+  // connector (connectors[0]) works inside Farcaster clients but not inside
+  // Base App, which needs its own Base Account connector — rather than
+  // guess which one applies, try each in turn and use whichever succeeds.
+  async function handleConnect() {
+    setConnectError("");
+    for (const connector of connectors) {
+      try {
+        await connectAsync({ connector });
+        return;
+      } catch {
+        // try the next connector — failure here just means this one
+        // doesn't apply to the current host
+      }
+    }
+    setConnectError("Could not connect — try reopening this from Base App or Warpcast.");
+  }
 
   useEffect(() => {
     if (!isMiniAppReady) setMiniAppReady();
@@ -409,14 +442,15 @@ export default function Home() {
         {wallet ? (
           <span style={s.walletChip}>{shortWallet}</span>
         ) : (
-          <button
-            style={s.connectBtn}
-            onClick={() => connectors[0] && connect({ connector: connectors[0] })}
-          >
+          <button style={s.connectBtn} onClick={handleConnect}>
             Connect
           </button>
         )}
       </div>
+
+      {connectError && !wallet && (
+        <div style={s.connectErrorBanner}>{connectError}</div>
+      )}
 
       {/* Scanning */}
       {screen === "scanning" && (
