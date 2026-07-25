@@ -494,10 +494,10 @@ export default function Home() {
           </p>
           {!frameSaved ? (
             <button style={s.btn} onClick={handleSaveFrame}>
-              Get notified if that changes
+              Join the notify list — alerts launching soon
             </button>
           ) : (
-            <p style={s.savedText}>Notifications enabled ✓</p>
+            <p style={s.savedText}>You&apos;re on the list ✓</p>
           )}
           {error && <p style={s.muted}>{error}</p>}
         </div>
@@ -560,10 +560,10 @@ export default function Home() {
 
           {!frameSaved ? (
             <button style={s.ghostBtn} onClick={handleSaveFrame}>
-              Save app + enable notifications
+              Join the notify list — alerts launching soon
             </button>
           ) : (
-            <p style={s.savedText}>Notifications enabled ✓</p>
+            <p style={s.savedText}>You&apos;re on the list ✓</p>
           )}
         </div>
       )}
