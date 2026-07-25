@@ -270,6 +270,19 @@ const s: Record<string, React.CSSProperties> = {
   },
 };
 
+// A connector that neither resolves nor rejects (observed with the Farcaster
+// connector inside Base App, where its request channel appears to just go
+// quiet instead of erroring) would otherwise stall the connect flow forever.
+const CONNECT_TIMEOUT_MS = 6000;
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("Connect attempt timed out")), ms)
+    ),
+  ]);
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -288,15 +301,23 @@ export default function Home() {
   const [connectError, setConnectError] = useState<string>("");
 
   // Which connector actually works depends on the host: the Farcaster
-  // connector (connectors[0]) works inside Farcaster clients but not inside
-  // Base App, which needs its own Base Account connector — rather than
-  // guess which one applies, try each in turn and use whichever succeeds.
+  // connector (connectors[0], needed first so OnchainKit's own auto-connect
+  // can find it) works inside Farcaster clients but not inside Base App,
+  // which needs its own Base Account connector instead — rather than guess
+  // which one applies, try each in turn. A connector can also resolve
+  // without throwing but hand back zero accounts (seen with the Farcaster
+  // connector inside Base App) — that has to be treated as a failure too,
+  // not just an outright rejection, or this stops after the first "success"
+  // that isn't actually a working connection.
   async function handleConnect() {
     setConnectError("");
     for (const connector of connectors) {
       try {
-        await connectAsync({ connector });
-        return;
+        const result = await withTimeout(
+          connectAsync({ connector }),
+          CONNECT_TIMEOUT_MS
+        );
+        if (result.accounts && result.accounts.length > 0) return;
       } catch {
         // try the next connector — failure here just means this one
         // doesn't apply to the current host
