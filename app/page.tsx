@@ -260,13 +260,21 @@ const s: Record<string, React.CSSProperties> = {
     color: "#A8A8B0", // --text-3
     fontFamily: "'JetBrains Mono', monospace",
   },
+  // Matches the main app's .chip-link and ClaimPanel's txLink — a pill,
+  // not an underlined text link.
   footerLink: {
-    display: "block",
+    display: "inline-flex",
+    alignItems: "center",
+    marginTop: "8px",
     fontSize: "11px",
+    fontWeight: 600,
     color: "#627EEA",
+    background: "rgba(98,126,234,0.09)", // --eth-soft
+    border: "1px solid rgba(98,126,234,0.22)", // --eth-border
+    borderRadius: "12px",
+    padding: "4px 12px",
     fontFamily: "'JetBrains Mono', monospace",
     textDecoration: "none",
-    marginTop: "4px",
   },
 };
 
@@ -419,7 +427,10 @@ export default function Home() {
           signature,
         }),
       });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? `Save failed (${res.status})`);
+      }
       setFrameSaved(true);
     } catch (e) {
       setError(

@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { verifyMessage } from "viem";
+import { createPublicClient, http } from "viem";
+import { base } from "viem/chains";
+
+// The plain `verifyMessage` export from "viem" only supports Externally
+// Owned Accounts — it does plain ECDSA recovery and nothing else. Base
+// Account (Coinbase Smart Wallet) is a contract account, so signatures from
+// it always failed that check, regardless of validity. A client-bound
+// verifyMessage supports both EOAs and contract accounts via ERC-6492.
+const publicClient = createPublicClient({
+  chain: base,
+  transport: process.env.ALCHEMY_API_PUBLIC_KEY
+    ? http(`https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_PUBLIC_KEY}`)
+    : http(),
+});
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +65,7 @@ export async function POST(req: NextRequest) {
     // rather than resolving false, so treat any failure here as invalid.
     let valid = false;
     try {
-      valid = await verifyMessage({
+      valid = await publicClient.verifyMessage({
         address: wallet as `0x${string}`,
         message: buildMessage(wallet, timestamp),
         signature,
