@@ -253,6 +253,51 @@ export default function ClaimPanel({
   });
   const funded = (receiverBalance ?? 0n) > 0n;
 
+  // settle() pays victim, finder, and protocol sequentially in one tx with
+  // no partial-settlement path — if any one of them is blacklisted by the
+  // token's issuer (USDC/USDT-style), the whole call reverts forever and
+  // the swept funds have no other way out of the receiver. Checked once the
+  // receiver is funded, against the same main-repo endpoint the web app
+  // uses — a real risk reduction, not a guarantee, since a blacklisting
+  // that happens after this check but before settle() lands isn't caught.
+  const [blacklistStatus, setBlacklistStatus] = useState<
+    "unknown" | "checking" | "safe" | "blocked"
+  >("unknown");
+  const [blockedWho, setBlockedWho] = useState<
+    "victim" | "finder" | "protocol" | null
+  >(null);
+
+  useEffect(() => {
+    if (!funded || isSettled) return;
+    setBlacklistStatus("checking");
+    const addresses = [victimWallet, ...(hasFinder ? [finderForClaim] : [])].join(",");
+    fetch(
+      `${SALVAGE_API_BASE}/api/blacklist-check?chain=${chain}&token=${finding.tokenAddress}&addresses=${addresses}`
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.success) {
+          setBlacklistStatus("unknown");
+          return;
+        }
+        const blacklisted = d.blacklisted as Record<string, boolean>;
+        if (blacklisted[victimWallet.toLowerCase()]) {
+          setBlockedWho("victim");
+          setBlacklistStatus("blocked");
+        } else if (hasFinder && blacklisted[finderForClaim.toLowerCase()]) {
+          setBlockedWho("finder");
+          setBlacklistStatus("blocked");
+        } else if (blacklisted[d.protocolFeeRecipient]) {
+          setBlockedWho("protocol");
+          setBlacklistStatus("blocked");
+        } else {
+          setBlacklistStatus("safe");
+        }
+      })
+      .catch(() => setBlacklistStatus("unknown"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [funded, isSettled, chain, finding.tokenAddress, victimWallet, hasFinder, finderForClaim]);
+
   const handleStartRecovery = async () => {
     if (!isVictimWallet || !claimId) return;
     setErrorMsg(null);
@@ -324,6 +369,15 @@ export default function ClaimPanel({
 
   const handleSettle = async () => {
     if (!claimId) return;
+    // Belt-and-suspenders: the button below already hides itself once
+    // blocked, but guard the call itself too, so nothing can trigger a
+    // doomed settle() around it.
+    if (blacklistStatus === "blocked") {
+      setErrorMsg(
+        "Blocked — a recipient is blacklisted for this token. Settling would permanently strand the funds."
+      );
+      return;
+    }
     setErrorMsg(null);
     try {
       await switchChainAsync({ chainId }).catch(() => {});
@@ -452,17 +506,40 @@ Verify the settlement contract yourself: https://${explorer}/address/${routerAdd
               "Share this with the contract owner. Once they rescue the tokens here, anyone can settle."
             )}
           </div>
+          {funded && blacklistStatus === "blocked" && (
+            <div
+              style={{
+                marginBottom: "8px",
+                padding: "8px 10px",
+                borderRadius: "8px",
+                background: "rgba(176,28,46,0.08)",
+                border: "1px solid rgba(176,28,46,0.2)",
+                color: "#B01C2E",
+                fontSize: "11px",
+                lineHeight: 1.6,
+              }}
+            >
+              This claim can&apos;t be safely settled — the {blockedWho} address is blacklisted
+              by this token&apos;s issuer. Settling now would permanently strand the funds with
+              no recovery path. Do not proceed.
+            </div>
+          )}
+
           <div>
             <button style={s.btnSecondary} onClick={copyOwnerInstructions}>
               {copied ? "✓ Copied" : "Copy Owner Instructions"}
             </button>
-            {funded && (
+            {funded && blacklistStatus !== "blocked" && (
               <button
                 style={{ ...s.btn, marginTop: "10px", background: "#1A6B3C", color: "#fff" }}
                 onClick={handleSettle}
-                disabled={state === "settling"}
+                disabled={state === "settling" || blacklistStatus === "checking"}
               >
-                {state === "settling" ? "Settling…" : "Settle Recovery"}
+                {state === "settling"
+                  ? "Settling…"
+                  : blacklistStatus === "checking"
+                  ? "Checking recipients…"
+                  : "Settle Recovery"}
               </button>
             )}
           </div>
