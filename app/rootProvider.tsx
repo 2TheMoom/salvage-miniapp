@@ -8,12 +8,30 @@ import {
   cookieStorage,
 } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
+import { defineChain } from "viem";
 import { baseAccount } from "wagmi/connectors";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import "@coinbase/onchainkit/styles.css";
 import { minikitConfig } from "@/minikit.config";
+
+// Arc is too new to be in viem/chains yet — mirrors src/lib/chains.ts in the
+// main Salvage repo exactly (same "no shared package" situation as
+// app/lib/contracts.ts). Mainnet values confirmed against Circle's own docs
+// (docs.arc.io/arc/references/connect-to-arc.md).
+const arc = defineChain({
+  id: 5042,
+  name: "Arc",
+  nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.mainnet.arc.io"] },
+  },
+  blockExplorers: {
+    default: { name: "Arc Etherscan", url: "https://arc.etherscan.io" },
+  },
+  testnet: false,
+});
 
 // OnchainKit's own default wagmi config (createWagmiConfig, used whenever no
 // wagmiConfig is supplied) only ever registers `base`/`baseSepolia` — Ethereum
@@ -29,7 +47,7 @@ import { minikitConfig } from "@/minikit.config";
 // Farcaster auto-connect, and this app's manual "Connect" button
 // (app/page.tsx) does the same.
 const wagmiConfig = createConfig({
-  chains: [base, mainnet],
+  chains: [base, mainnet, arc],
   connectors: [
     farcasterMiniApp(),
     baseAccount({
@@ -48,6 +66,9 @@ const wagmiConfig = createConfig({
     // No Coinbase Developer Platform key path confirmed for mainnet — public
     // RPC is an acceptable fallback for this app's read/claim volume.
     [mainnet.id]: http(),
+    // Same reasoning as mainnet above — public RPC fallback via defineChain's
+    // own rpcUrls.default.
+    [arc.id]: http(),
   },
 });
 

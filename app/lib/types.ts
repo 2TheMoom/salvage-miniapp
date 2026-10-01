@@ -1,4 +1,4 @@
-export type Chain = "eth" | "base";
+export type Chain = "eth" | "base" | "arc";
 
 export interface VictimFinding {
   txHash: string;

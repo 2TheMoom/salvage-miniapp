@@ -6,8 +6,8 @@ import { useAccount, useConnect, useSignMessage } from "wagmi";
 import ClaimPanel from "@/app/components/ClaimPanel";
 import { VictimFinding, Chain } from "@/app/lib/types";
 
-const SCAN_CHAINS: Chain[] = ["eth", "base"];
-const CHAIN_LABEL: Record<Chain, string> = { eth: "Ethereum", base: "Base" };
+const SCAN_CHAINS: Chain[] = ["eth", "base", "arc"];
+const CHAIN_LABEL: Record<Chain, string> = { eth: "Ethereum", base: "Base", arc: "Arc" };
 
 type Screen = "scanning" | "results" | "empty" | "error" | "claim";
 

@@ -7,6 +7,7 @@
 export const RECOVERY_ROUTER_ADDRESS: Record<number, `0x${string}`> = {
   1: "0xD9A5f1Fcf39F99152d6443132B21C1D8f7fAAC25", // ETH mainnet
   8453: "0x2240792d1A9D964d238bD693fCb09586B10faEdf", // Base mainnet
+  5042: "0xd21c72FBE27B6Cd26A5DBf49148B7bA0a4CAed27", // Arc mainnet
 };
 
 export const ROUTER_ABI = [

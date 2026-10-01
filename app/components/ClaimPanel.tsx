@@ -21,7 +21,14 @@ import { VictimFinding, Chain } from "@/app/lib/types";
 // Same origin the rest of this mini app already talks to for scanning.
 const SALVAGE_API_BASE = "https://www.usesalvage.xyz";
 
-const CHAIN_IDS: Record<Chain, number> = { eth: 1, base: 8453 };
+const CHAIN_IDS: Record<Chain, number> = { eth: 1, base: 8453, arc: 5042 };
+
+const CHAIN_NAME: Record<Chain, string> = { eth: "Ethereum", base: "Base", arc: "Arc" };
+const EXPLORER_BASE: Record<Chain, string> = {
+  eth: "https://etherscan.io",
+  base: "https://basescan.org",
+  arc: "https://arc.etherscan.io",
+};
 
 interface ClaimPanelProps {
   finding: VictimFinding;
@@ -416,8 +423,8 @@ export default function ClaimPanel({
 
   const copyOwnerInstructions = async () => {
     if (!receiver) return;
-    const chainName = chain === "eth" ? "Ethereum" : "Base";
-    const explorer = chain === "eth" ? "etherscan.io" : "basescan.org";
+    const chainName = CHAIN_NAME[chain];
+    const explorer = EXPLORER_BASE[chain].replace("https://", "");
     const text = `Recovery deposit address (Salvage claim ${claimId?.slice(
       0,
       10
@@ -441,7 +448,7 @@ Verify the settlement contract yourself: https://${explorer}/address/${routerAdd
     }
   };
 
-  const explorerBase = chain === "eth" ? "https://etherscan.io" : "https://basescan.org";
+  const explorerBase = EXPLORER_BASE[chain];
 
   return (
     <div style={s.wrap}>

@@ -8,13 +8,13 @@
 
 [**Open in Base App**](https://salvage-miniapp.vercel.app) · [**Main app**](https://usesalvage.xyz) · [**Protocol repo**](https://github.com/2TheMoom/Salvage)
 
-This is the Base App Mini App companion to [Salvage](https://usesalvage.xyz) — a non-custodial recovery protocol for ERC-20 tokens stranded in smart contracts. It brings the "Did I Lose Tokens?" wallet scan directly into the Base App: your wallet is already connected, so a single tap checks it — across both Ethereum and Base — for tokens mistakenly sent to token-contract addresses.
+This is the Base App Mini App companion to [Salvage](https://usesalvage.xyz) — a non-custodial recovery protocol for ERC-20 tokens stranded in smart contracts. It brings the "Did I Lose Tokens?" wallet scan directly into the Base App: your wallet is already connected, so a single tap checks it — across Ethereum, Base, and Arc — for tokens mistakenly sent to token-contract addresses.
 
 Recovery doesn't mean leaving Base App either. Signing the EIP-712 claim, registering it on-chain, and settling once the receiver is funded all happen natively here — the same trustless flow the main app uses, without the handoff to a website.
 
 ## What it does
 
-- **Multi-chain auto-scan** — reads the connected wallet from MiniKit context and scans Ethereum and Base in parallel for tokens mistakenly sent to token-contract addresses; each finding is labeled with the chain it was found on
+- **Multi-chain auto-scan** — reads the connected wallet from MiniKit context and scans Ethereum, Base, and Arc in parallel for tokens mistakenly sent to token-contract addresses; each finding is labeled with the chain it was found on
 - **Native on-chain recovery** — sign the EIP-712 `RecoveryClaim`, register it on `SalvageRecoveryRouter`, get the deterministic deposit address, and settle once funded — no redirect to the main site
 - **Finder-aware payouts** — looks up whether a finder already registered against a given loss before the victim signs, so a registered finder's 7% cut actually routes on settlement rather than silently defaulting to a victim-only split
 - **Notification opt-in** — captures the wallet address (and Farcaster fid, if present) so a user can be alerted when a finder registers a recovery against it. The enabled/disabled state updates live via Base's webhook; actual push *delivery* is still pending Base's wallet-address notifications API supplying a real token/url — right now that field is saved empty
